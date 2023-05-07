@@ -3,14 +3,23 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
+using UnityEngine.Events;
 
 public class Duck : MonoBehaviour
 {
     [SerializeField] [Range(min: 0,max: 1)] float moveDuration = 0.1f;
     [SerializeField] [Range(min: 0,max: 1)] float jumpHeight = 0.5f;
-    // Update is called once per frame
+
+    [SerializeField] int leftMoveLimit;
+    [SerializeField] int rightMoveLimit;
+    [SerializeField] int backMoveLimit;
+    
+    public UnityEvent<Vector3> onJumpEnd;
+    private bool isDie = false;
     void Update()
     {
+        if(isDie)
+            return;
         if(DOTween.IsTweening(targetOrId: transform))
             return;
 
@@ -40,9 +49,45 @@ public class Duck : MonoBehaviour
     }
     public void Move(Vector3 direction)
     {
-        
-        transform.DOJump(endValue: transform.position+direction,jumpPower: jumpHeight,numJumps: 1 ,duration: moveDuration);
+        var targetPosition = transform.position + direction;
+
+        if(targetPosition.x < leftMoveLimit || 
+        targetPosition.x > rightMoveLimit || 
+        targetPosition.z < backMoveLimit ||
+        Tree.AllPositions.Contains(targetPosition))
+        {
+                targetPosition = transform.position;
+        }
+
+        transform
+        .DOJump
+        (endValue: targetPosition,
+        jumpPower: jumpHeight,
+        numJumps: 1 ,
+        duration: moveDuration)
+        .onComplete = BroadCastPositionOnJumpEnd;
         
         transform.forward = direction;
+    }
+
+    public void UpdateMoveLimit(int horizontalSize, int backLimit)
+    {
+        leftMoveLimit = -horizontalSize/2;
+        rightMoveLimit = horizontalSize/2;
+        backMoveLimit = backLimit;
+    }
+
+    private void BroadCastPositionOnJumpEnd()
+    {
+        onJumpEnd.Invoke(arg0: transform.position);
+    }
+    
+    private void OnTriggerEnter(Collider other)
+    {
+        if(isDie == true)
+            return;
+        transform.DOScaleY(endValue: 0.1f,duration: 0.2f);
+
+        isDie = true;
     }
 }

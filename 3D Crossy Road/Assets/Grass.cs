@@ -6,14 +6,19 @@ using UnityEngine;
 public class Grass : Terrain
 {
     [SerializeField] List<GameObject> treePrefabList;
-    [SerializeField, Range(min: 0,max: 1)] float treePercentage;
+    [SerializeField, Range(min: 0,max: 1)] float treeProbability;
+
+    public void SetTreePercentage(float newProbability)
+    {
+        this.treeProbability = Mathf.Clamp01(value: newProbability);
+    }
 
     public override void Generate(int size)
     {
         base.Generate(size);
 
         var limit = Mathf.FloorToInt(f: (float)size / 2);
-        var treeCount = Mathf.FloorToInt(f: (float)size * treePercentage); 
+        var treeCount = Mathf.FloorToInt(f: (float)size * treeProbability); 
 
         List<int> emptyPosition = new List<int>();
         for (int i = -limit; i <= limit; i++)
@@ -27,11 +32,22 @@ public class Grass : Terrain
 
             emptyPosition.RemoveAt(randomIndex);
 
-            randomIndex = Random.Range(minInclusive: 0,maxExclusive: treePrefabList.Count);;
-            var prefab = treePrefabList[randomIndex];
-
-            var tree = Instantiate(original: prefab, parent: transform);
-            tree.transform.localPosition = new Vector3(x: pos,y: 0,z: 0);
+            SpawnRandomTree(pos);
         }
+        SpawnRandomTree(-limit -1);
+        SpawnRandomTree(limit +1);
+    }
+    private void SpawnRandomTree(int xPos)
+    {
+            var randomIndex = Random.Range(minInclusive: 0,maxExclusive: treePrefabList.Count);
+            var prefab = treePrefabList[index: randomIndex];
+
+            var tree = Instantiate(
+                original: prefab,
+                position: new Vector3(x: xPos, y: 0, z: this.transform.position.z),
+                rotation: Quaternion.identity, 
+                parent: transform);
+            
+
     }
 }
