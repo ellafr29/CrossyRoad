@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class Car : MonoBehaviour
 {
-    [SerializeField, Range(min: 0,max:5)] float speed = 1;
+    [SerializeField, Range(min: 0,max:5)] float speed = 3;
     
    Vector3 initialPosition;
    float distanceLimit = float.MaxValue;
